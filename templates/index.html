@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="refresh" content="10">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Portal dữ liệu khách hàng</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+{% macro pagerbtn(param, cur, total, other_param=None, other_val=0) %}
+{% endmacro %}
+
+{% macro pagernav(param, cur, total, other_param=None, other_val=0) %}
+  <div class="pager">
+    <span class="pginfo">{{ cur }} / {{ total }}</span>
+    {% if cur > 1 %}
+      <a class="pg nav" href="{{ param }}={{ cur - 1 }}{% if other_val and other_val > 1 %}&{{ other_param }}={{ other_val }}{% endif %}">‹</a>
+    {% endif %}
+    {% set shown = [] %}
+    {%- for i in range(1, total + 1) -%}
+      {%- if i == 1 or i == total or (i >= cur - 1 and i <= cur + 1) -%}
+        {%- if shown and shown[-1] != i - 1 and shown[-1] != i -%}
+          {%- set _ = shown.append("gap") -%}
+        {%- endif -%}
+        {%- set _ = shown.append(i) -%}
+      {%- endif -%}
+    {%- endfor -%}
+    {%- for it in shown -%}
+      {%- if it == "gap" -%}
+        <span class="pg ell">…</span>
+      {%- else -%}
+        <a class="pg{% if it == cur %} active{% endif %}" href="{{ param }}={{ it }}{% if other_val and other_val > 1 %}&{{ other_param }}={{ other_val }}{% endif %}">{{ it }}</a>
+      {%- endif -%}
+    {%- endfor -%}
+    {% if cur < total %}
+      <a class="pg nav" href="{{ param }}={{ cur + 1 }}{% if other_val and other_val > 1 %}&{{ other_param }}={{ other_val }}{% endif %}">›</a>
+    {% endif %}
+    <span class="pginfo">{{ param | replace("?", "") | upper }} · trang {{ cur }}/{{ total }}</span>
+  </div>
+{% endmacro %}
+
+
+<header>
+  <div class="logo">📡</div>
+  <h1>⚙️ PORTAL DỮ LIỆU THIẾT BỊ<span style="font-size:10px;color:var(--muted);font-weight:400;margin-left:12px;font-family:'JetBrains Mono',Consolas,monospace">VCBUIEggTCAtIEEgMCA1e1kwdV9rbjB3X3doM3IzX3QwX2wwMGt9Cg==</span></h1>
+  <div class="spacer"></div>
+  <span class="searchbar">
+    <form action="/search" method="get" style="display:flex;gap:8px">
+      <input type="text" name="q" placeholder="tìm agent / task / loại…">
+      <button type="submit">Search</button>
+    </form>
+  </span>
+  <span class="live"><i></i> auto-refresh 10s</span>
+  {% if session.get('user') %}
+  <a class="dl" href="{{ url_for('account') }}">👤 {{ session['user'] }}</a>
+  <a class="dl" href="{{ url_for('logout') }}">Đăng xuất</a>
+  {% endif %}
+</header>
+
+<main>
+
+  <div class="stats">
+    <div class="stat g"><div class="n">{{ online_n }}<span style="color:var(--muted);font-size:15px"> / {{ total_n }}</span></div><div class="l">Agents Online</div></div>
+    <div class="stat"><div class="n">{{ tasks_n }}</div><div class="l">Tasks Total</div></div>
+    <div class="stat g"><div class="n">{{ completed_n }}</div><div class="l">Completed</div></div>
+    <div class="stat r"><div class="n">{{ failed_n }}</div><div class="l">Failed</div></div>
+    <div class="stat a"><div class="n">{{ artifacts_n }}</div><div class="l">Artifacts</div></div>
+  </div>
+
+  <div class="panel">
+    <div class="ph">
+      <h2>🛰️ Agents</h2>
+      <span class="cnt">{{ online_n }}/{{ total_n }} online</span>
+      <div class="spacer"></div>
+    </div>
+    <div class="pb">
+      <table>
+        <thead><tr><th>Agent</th><th>Status</th><th>Last Seen</th><th>Device</th><th>Android</th><th>App</th></tr></thead>
+        <tbody>
+          {% for a in agents %}
+          <tr>
+            <td class="value">{{ a.agent_id }}</td>
+            <td><span class="badge {{ 'on' if a.online else 'off' }}"><i></i>{{ 'ONLINE' if a.online else 'OFFLINE' }}</span></td>
+            <td class="mut">{{ a.last_seen_fmt }}</td>
+            <td>{{ a.model or '—' }}<span class="mut"> · {{ a.manufacturer or '?' }}</span></td>
+            <td class="mut">{{ a.android_version or '—' }} <span style="opacity:.6">(SDK {{ a.sdk_version or '?' }})</span></td>
+            <td class="mut mono">{{ a.app_version or '—' }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="6" class="empty">Chưa có thiết bị nào được ghi nhận.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="ph">
+      <h2>📋 TASKS · RESULTS</h2>
+      <span class="cnt">{{ tasks_n }} total · ✅ {{ completed_n }} · ❌ {{ failed_n }} · trang {{ tsk }}/{{ task_pages }}</span>
+      <div class="spacer"></div>
+      <a class="dl" href="/results">Tra cứu chi tiết →</a>
+    </div>
+    <div class="pb">
+      {% for t in tasks %}
+      <details class="res">
+        <summary>
+          <span class="tid">{{ t.task_id }}</span>
+          <span class="who">{{ t.agent_id }} · {{ t.type }}</span>
+          <div class="spacer"></div>
+          <span class="who mono">{{ (t.completed_at or (t.created_at or '—'))[:19].replace('T',' ') }}</span>
+          <span class="badge st-{{ t.status }}">{{ t.status }}</span>
+        </summary>
+        <div class="resmeta">
+          <span class="who">created: {{ (t.created_at or '—')[:19].replace('T',' ') }}</span>
+          <span class="who" style="margin-left:18px">received: {{ (t.received_at or '—')[:19].replace('T',' ') }}</span>
+          <span class="who" style="margin-left:18px">completed: {{ (t.completed_at or '—')[:19].replace('T',' ') }}</span>
+        </div>
+        {% if t.result %}
+        <pre>{{ t.result[:2000] }}</pre>
+        {% elif t.error %}
+        <pre style="color:var(--red)">ERROR: {{ t.error }}</pre>
+        {% else %}
+        <pre style="color:var(--muted)">(chưa có result — task đang chờ agent xử lý)</pre>
+        {% endif %}
+      </details>
+      {% else %}
+      <table><tbody><tr><td class="empty">Chưa có bản ghi nào.</td></tr></tbody></table>
+      {% endfor %}
+
+      {{ pagernav('?tsk', tsk, task_pages, 'art', art) }}
+    </div>
+  </div>
+
+<div class="panel">
+    <div class="ph">
+      <h2>ARTIFACTS</h2>
+      <span class="cnt">{{ artifacts|length }}/{{ artifacts_n }} · trang {{ art }}/{{ art_pages }}</span>
+      <div class="spacer"></div>
+    </div>
+    <div class="pb">
+      <table>
+        <thead><tr><th class="w-thumb"></th><th>Artifact</th><th>Agent</th><th>Task</th><th>Type</th><th>Filename</th><th>Size</th><th>Created</th><th></th></tr></thead>
+        <tbody>
+          {% for a in artifacts %}
+          <tr>
+            <td class="c-thumb">{% if a.is_image %}<img class="thumb" src="/artifacts/{{ a.artifact_id }}" alt="{{ a.filename }}">{% endif %}</td>
+            <td class="value">{{ a.artifact_id }}</td>
+            <td>{{ a.agent_id }}</td>
+            <td class="mut">{{ a.task_id or '—' }}</td>
+            <td><span class="badge st-queued" style="color:#7c5cff;background:rgba(124,92,255,.12)">{{ a.type }}</span></td>
+            <td class="mut">{{ a.filename }}</td>
+            <td class="mut mono">{{ a.size_kb }}</td>
+            <td class="mut">{{ a.created_fmt }}</td>
+            <td style="white-space:nowrap"><a class="dl" href="/artifacts/{{ a.artifact_id }}">download</a><button class="del" title="xóa artifact" onclick="delArtifact('{{ a.artifact_id }}')">✕</button></td>
+          </tr>
+          {% else %}
+          <tr><td colspan="9" class="empty">Chưa có tệp nào được tải lên.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {{ pagernav('/?art', art, art_pages, 'tsk', tsk) }}
+
+    </div>
+  </div>
+
+<footer>© 2026 · Hệ thống thu thập dữ liệu thiết bị · Phiên bản 2.0</footer>
+</body>
+
+<script>
+function delArtifact(id) {
+  if (!confirm("Xóa artifact " + id + "? (file + DB row sẽ bị xóa)")) return;
+  fetch("/artifacts/" + id + "/delete", { method: "POST" })
+    .then(r => { if (!r.ok) return r.text().then(t => { throw new Error(r.status + " " + t); }); return r.json(); })
+    .then(d => { location.reload(); })
+    .catch(e => alert("delete fail: " + e.message));
+}
+</script>
+</body>
+</html>

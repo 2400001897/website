@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Đặt lại mật khẩu</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<style>
+  .auth { max-width: 380px; margin: 10vh auto 0; background: var(--panel);
+          border: 1px solid var(--border-soft); border-radius: 12px; padding: 26px; }
+  .auth h1 { font-size: 15px; color: #dfe6ee; text-align: center; margin: 0 0 6px; }
+  .auth label { display: block; color: var(--muted); font-size: 11px; margin: 10px 0 4px; }
+  .auth input { width: 100%; box-sizing: border-box; background: #161b22; border: 1px solid var(--border);
+      color: var(--text); padding: 9px 12px; border-radius: 8px; font-family: inherit; font-size: 13.5px; }
+  .auth button { width: 100%; margin-top: 16px; border: 1px solid rgba(78,161,255,.45);
+                 background: linear-gradient(135deg, rgba(78,161,255,.25), rgba(124,92,255,.25));
+                 color: var(--accent); padding: 10px; border-radius: 8px; cursor: pointer; }
+  .auth .err { color: var(--red); font-size: 12.5px; margin-top: 12px; }
+</style>
+</head>
+<body>
+<div class="auth">
+  <h1>ĐẶT LẠI MẬT KHẨU</h1>
+  {% if error %}<div class="err">{{ error }}</div>{% endif %}
+  <form method="post" action="{{ url_for('reset') }}">
+    <input type="hidden" name="token" value="{{ token }}">
+    <label>Mật khẩu mới (≥ 8 ký tự)</label>
+    <input type="password" name="password" autofocus>
+    <label>Nhập lại mật khẩu</label>
+    <input type="password" name="password2">
+    <button type="submit">Đặt lại mật khẩu</button>
+  </form>
+</div>
+</body>
+</html>

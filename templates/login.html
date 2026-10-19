@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Đăng nhập</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<style>
+  .auth { max-width: 380px; margin: 10vh auto 0; background: var(--panel);
+          border: 1px solid var(--border-soft); border-radius: 12px; padding: 26px; }
+  .auth h1 { font-size: 15px; color: #dfe6ee; text-align: center; margin: 0 0 6px; }
+  .sub { color: var(--muted); font-size: 11.5px; text-align: center; margin-bottom: 18px; }
+  .auth label { display: block; color: var(--muted); font-size: 11px; margin: 10px 0 4px;
+                text-transform: uppercase; letter-spacing: .6px; }
+  .auth input[type=text], .auth input[type=password], .auth input[type=email] {
+      width: 100%; box-sizing: border-box; background: #161b22; border: 1px solid var(--border);
+      color: var(--text); padding: 9px 12px; border-radius: 8px; font-family: inherit; font-size: 13.5px; }
+  .auth button { width: 100%; margin-top: 16px; background: linear-gradient(135deg, rgba(78,161,255,.25), rgba(124,92,255,.25));
+                 border: 1px solid rgba(78,161,255,.45); color: var(--accent); padding: 10px;
+                 border-radius: 8px; cursor: pointer; font-size: 13.5px; }
+  .auth .err { color: var(--red); font-size: 12.5px; margin-top: 12px; }
+  .auth .ok  { color: var(--green); font-size: 12.5px; margin-top: 12px; }
+  .auth .links { text-align: center; margin-top: 14px; font-size: 12px; }
+  .auth .links a { color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="auth">
+  <div style="text-align:center;font-size:30px">⚙️</div>
+  <h1>PORTAL DỮ LIỆU THIẾT BỊ</h1>
+  <div class="sub">Đăng nhập để truy cập</div>
+  {% if error %}<div class="err">{{ error }}</div>{% endif %}
+  {% with msgs = get_flashed_messages() %}{% for m in msgs %}<div class="ok">{{ m }}</div>{% endfor %}{% endwith %}
+  <form method="post" action="{{ url_for('login', next=request.values.get('next','/')) }}">
+    <label>Tài khoản</label>
+    <input type="text" name="username" autofocus autocomplete="username">
+    <label>Mật khẩu</label>
+    <input type="password" name="password" autocomplete="current-password">
+    <button type="submit">Đăng nhập</button>
+  </form>
+  <div class="links"><a href="{{ url_for('forgot') }}">Quên mật khẩu?</a></div>
+</div>
+<footer>© 2026 · Hệ thống thu thập dữ liệu thiết bị · Phiên bản 2.0</footer>
+</body>
+</html>

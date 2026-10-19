@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.env
+website_b.db
+victim_bot.state.json
+artifacts/
+run.log
+run.err
+Dockerfile
+docker-compose.yml
+.dockerignore
+README.md
+.git

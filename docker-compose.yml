@@ -1,0 +1,22 @@
+services:
+  portal:
+    build: .
+    container_name: portal
+    ports:
+      - "${PORT:-8000}:8000"
+    volumes:
+      # config + data giữ bên ngoài container → copy cả folder sang server khác
+      # là có ngay data như cũ (db + artifacts + bot state)
+      - ./.env:/app/.env:ro
+      - ./website_b.db:/app/website_b.db
+      - ./victim_bot.state.json:/app/victim_bot.state.json
+      - ./artifacts:/app/artifacts
+    environment:
+      - TZ=Asia/Ho_Chi_Minh
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"]
+      interval: 30s
+      timeout: 6s
+      retries: 3
+      start_period: 15s

@@ -1,0 +1,18 @@
+# Secrets & config
+.env
+
+# Data runtime (giu o server, khong len repo)
+website_b.db
+victim_bot.state.json
+artifacts/
+
+# Runtime logs
+run.log
+run.err
+
+# Python
+__pycache__/
+*.pyc
+
+# Flag CTF (bo dong nay neu repo private va muon commit flag)
+flag.txt
